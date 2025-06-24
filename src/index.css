@@ -143,3 +143,29 @@
 .bounce-heart {
   animation: bounce-heart 1.5s infinite;
 }
+
+/* Loading progress animation */
+@keyframes loading-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.loading-progress-bar {
+  animation: loading-progress 8s ease-in-out forwards;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}

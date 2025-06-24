@@ -83,7 +83,7 @@ const Loading = () => {
         {/* Loading bar */}
         <div className="w-80 mx-auto mb-6">
           <div className="h-3 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full animate-pulse loading-bar"></div>
+            <div className="h-full bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full animate-pulse loading-progress-bar"></div>
           </div>
         </div>
 
@@ -98,17 +98,6 @@ const Loading = () => {
           Criando a experiência perfeita para você... 💕
         </p>
       </div>
-
-      <style jsx>{`
-        .loading-bar {
-          animation: loading-progress 8s ease-in-out forwards;
-        }
-        
-        @keyframes loading-progress {
-          0% { width: 0%; }
-          100% { width: 100%; }
-        }
-      `}</style>
     </div>
   );
 };
