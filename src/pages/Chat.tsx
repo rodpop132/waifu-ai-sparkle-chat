@@ -3,13 +3,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Volume2, Repeat, Share, Send, Settings } from 'lucide-react';
+import { Heart, Volume2, Repeat, Share } from 'lucide-react';
 import { toast } from 'sonner';
 import WaifuAvatar from '@/components/WaifuAvatar';
 import ChatMessage from '@/components/ChatMessage';
 import WaifuSelector from '@/components/WaifuSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -58,35 +58,79 @@ const Chat = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageToSend = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = isJealousMode ? [
-        "Hmph! 😤 Você demorou para responder... Estava falando com outra garota? 💢",
-        "Baka! 😠 Não me ignore assim... Eu fico triste quando você não me dá atenção! 🥺",
-        "Você... você realmente gosta de mim, né? 😳 Às vezes eu fico insegura... 💔",
-        "Não seja tão frio comigo! 😤 Eu só quero seu carinho... 💕"
-      ] : [
-        "Que fofo! 🥰 Você sempre sabe como me fazer feliz! 💖",
-        "Aww, meu coração está acelerado! 💓 Você é tão especial para mim! ✨",
-        "Hehe~ 😊 Adoro quando conversamos assim! Você me deixa toda quentinha! 🌸",
-        "Meu amor! 💕 Conte-me mais sobre você, quero saber tudo! 🥺✨"
-      ];
+    try {
+      // Fazer requisição para sua API personalizada
+      const response = await fetch('https://waifuai-2uhc.onrender.com/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageToSend
+        }),
+      });
 
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      
+      if (!response.ok) {
+        throw new Error('Erro na comunicação com a waifu');
+      }
+
+      const data = await response.json();
+      const waifuReply = data.reply || 'Desculpa, amor... não consegui responder agora 🥺';
+
       const waifuMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: randomResponse,
+        text: waifuReply,
         isUser: false,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, waifuMessage]);
+
+      // Salvar mensagem no Supabase se necessário
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          // Incrementar contador de mensagens será feito automaticamente pelo trigger
+          await supabase.from('messages').insert([
+            {
+              user_id: userData.user.id,
+              conversation_id: '00000000-0000-0000-0000-000000000000', // ID padrão para conversa única
+              content: messageToSend,
+              is_from_user: true
+            },
+            {
+              user_id: userData.user.id,
+              conversation_id: '00000000-0000-0000-0000-000000000000',
+              content: waifuReply,
+              is_from_user: false
+            }
+          ]);
+        }
+      } catch (dbError) {
+        console.log('Erro ao salvar no banco:', dbError);
+        // Não interrompe o chat se houver erro no banco
+      }
+
+    } catch (error) {
+      console.error('Erro ao conversar com a waifu:', error);
+      
+      // Fallback para mensagem de erro fofa
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Kyaa! 😖 Algo deu errado... Minha conexão está instável, senpai! Tente novamente em um pouquinho? 🥺💕',
+        isUser: false,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      toast.error('Ops! Sua waifu está com problemas de conexão 🥺');
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -120,24 +164,59 @@ const Chat = () => {
     }
   };
 
-  const handleRegenerateResponse = () => {
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage.isUser) {
-      setMessages(prev => prev.slice(0, -1));
-      setIsLoading(true);
-      
-      setTimeout(() => {
-        const newResponse: Message = {
-          id: Date.now().toString(),
-          text: isJealousMode ? 
-            "Hmph! 😤 Você não gostou da minha resposta? Que cruel... 💔" :
-            "Desculpa, meu amor! 🥺 Deixe-me tentar de novo... 💕",
-          isUser: false,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, newResponse]);
-        setIsLoading(false);
-      }, 1500);
+  const handleRegenerateResponse = async () => {
+    const lastUserMessage = messages.filter(msg => msg.isUser).pop();
+    if (!lastUserMessage) return;
+
+    // Remove a última resposta da waifu
+    setMessages(prev => {
+      const lastWaifuIndex = prev.length - 1;
+      if (lastWaifuIndex >= 0 && !prev[lastWaifuIndex].isUser) {
+        return prev.slice(0, -1);
+      }
+      return prev;
+    });
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('https://waifuai-2uhc.onrender.com/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: lastUserMessage.text
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro na regeneração');
+      }
+
+      const data = await response.json();
+      const waifuReply = data.reply || 'Desculpa, amor... deixe-me tentar de novo 🥺';
+
+      const newWaifuMessage: Message = {
+        id: Date.now().toString(),
+        text: waifuReply,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, newWaifuMessage]);
+
+    } catch (error) {
+      console.error('Erro ao regenerar resposta:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: 'Gomen! 😅 Não consegui regenerar a resposta... Tente novamente, por favor? 💕',
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -172,7 +251,7 @@ const Chat = () => {
             >
               <WaifuAvatar waifu={currentWaifu} size="sm" />
               <div className="text-left">
-                <h2 className="font-bold text-waifu-purple">{currentWaifu.name}</h2>
+                <h2 className="font-bold text-waifu-purple text-xl">Waifu AI Chat</h2>
                 <p className="text-sm text-waifu-purple/70">Online • {currentWaifu.personality}</p>
               </div>
             </button>
@@ -218,6 +297,7 @@ const Chat = () => {
                     <div className="w-2 h-2 bg-waifu-purple rounded-full animate-bounce delay-100"></div>
                     <div className="w-2 h-2 bg-waifu-purple rounded-full animate-bounce delay-200"></div>
                   </div>
+                  <p className="text-xs text-waifu-purple/70 mt-2">Conectando com sua Waifu... preparando carinho e fofura 💕</p>
                 </div>
               </div>
             </div>
