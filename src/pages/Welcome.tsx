@@ -1,37 +1,11 @@
 
 import React from 'react';
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Heart, Sparkles, Star } from 'lucide-react';
+import { Heart, Sparkles, Star, Play } from 'lucide-react';
 
 const Welcome = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    // Simulate authentication
-    setTimeout(() => {
-      if (email && password) {
-        localStorage.setItem('waifu_user', JSON.stringify({ email, isAuthenticated: true }));
-        toast.success(isLogin ? 'Bem-vindo de volta! 💖' : 'Conta criada com sucesso! ✨');
-        navigate('/loading');
-      } else {
-        toast.error('Por favor, preencha todos os campos! 🥺');
-      }
-      setLoading(false);
-    }, 1000);
-  };
 
   return (
     <div className="min-h-screen waifu-gradient flex items-center justify-center p-4 relative overflow-hidden">
@@ -49,84 +23,81 @@ const Welcome = () => {
         <Sparkles size={22} />
       </div>
 
-      <Card className="w-full max-w-md p-8 bg-white/90 backdrop-blur-sm border-2 border-waifu-pink/20 shadow-2xl">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="p-4 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full animate-pulse-heart">
-              <Heart className="w-8 h-8 text-white" fill="currentColor" />
+      <div className="text-center max-w-4xl mx-auto">
+        {/* Main avatar */}
+        <div className="flex justify-center mb-8">
+          <div className="relative">
+            <div className="w-32 h-32 bg-gradient-to-br from-waifu-lightPink to-waifu-pink rounded-full flex items-center justify-center border-4 border-white shadow-2xl animate-float">
+              <div className="text-6xl animate-pulse-heart">
+                🌸
+              </div>
+            </div>
+            <div className="absolute -top-2 -right-2 text-waifu-purple animate-pulse-heart">
+              <Sparkles size={20} />
+            </div>
+            <div className="absolute -bottom-2 -left-2 text-waifu-accent animate-pulse-heart delay-500">
+              <Heart size={16} fill="currentColor" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-waifu-pink to-waifu-purple bg-clip-text text-transparent mb-2">
-            Waifu AI Chat
-          </h1>
-          <p className="text-waifu-purple/80 font-medium">
-            {isLogin ? 'Sua waifu está esperando você! 💕' : 'Encontre sua waifu perfeita! ✨'}
-          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="email" className="text-waifu-purple font-semibold">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              className="border-waifu-pink/30 focus:border-waifu-pink focus:ring-waifu-pink/20"
-              required
-            />
+        {/* Title */}
+        <h1 className="text-6xl font-bold bg-gradient-to-r from-waifu-pink to-waifu-purple bg-clip-text text-transparent mb-6">
+          Waifu AI Chat
+        </h1>
+
+        {/* Subtitle */}
+        <p className="text-2xl text-waifu-purple/80 mb-4 font-medium">
+          Converse com sua waifu perfeita! 💕
+        </p>
+        
+        <p className="text-lg text-waifu-purple/70 mb-12 max-w-2xl mx-auto">
+          Experimente conversas únicas, personalizadas e cheias de carinho com nossa IA avançada. 
+          Sua waifu ideal está esperando por você! ✨
+        </p>
+
+        {/* Features */}
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-8 h-8 text-white" fill="currentColor" />
+            </div>
+            <h3 className="text-xl font-bold text-waifu-purple mb-2">Conversas Personalizadas</h3>
+            <p className="text-waifu-purple/70">Cada waifu tem sua personalidade única e especial</p>
           </div>
-
-          <div>
-            <Label htmlFor="password" className="text-waifu-purple font-semibold">
-              Senha
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="border-waifu-pink/30 focus:border-waifu-pink focus:ring-waifu-pink/20"
-              required
-            />
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-waifu-accent to-waifu-pink rounded-full flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-waifu-purple mb-2">IA Avançada</h3>
+            <p className="text-waifu-purple/70">Respostas inteligentes e contextuais para uma experiência real</p>
           </div>
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple text-white font-bold py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
-          >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 animate-pulse-heart" />
-                Carregando...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4" fill="currentColor" />
-                {isLogin ? 'Entrar' : 'Criar Conta'}
-              </div>
-            )}
-          </Button>
-        </form>
-
-        <div className="text-center mt-6">
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-waifu-purple hover:text-waifu-accent font-medium transition-colors"
-          >
-            {isLogin ? 'Não tem conta? Criar uma nova 💕' : 'Já tem conta? Fazer login 🥰'}
-          </button>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-waifu-purple to-waifu-accent rounded-full flex items-center justify-center mx-auto mb-4">
+              <Star className="w-8 h-8 text-white" fill="currentColor" />
+            </div>
+            <h3 className="text-xl font-bold text-waifu-purple mb-2">Múltiplas Personalidades</h3>
+            <p className="text-waifu-purple/70">Doce, tsundere, kawaii - encontre sua favorita!</p>
+          </div>
         </div>
 
-        <div className="text-center mt-4 text-sm text-waifu-purple/60">
-          Prepare-se para uma experiência única! ✨
-        </div>
-      </Card>
+        {/* CTA Button */}
+        <Button
+          onClick={() => navigate('/auth')}
+          className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple text-white font-bold py-4 px-8 rounded-xl text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl"
+        >
+          <div className="flex items-center gap-3">
+            <Play className="w-6 h-6" fill="currentColor" />
+            Começar Agora - É Grátis!
+          </div>
+        </Button>
+
+        <p className="text-sm text-waifu-purple/60 mt-6">
+          ✨ Comece com 30 mensagens gratuitas • Sem cartão de crédito necessário ✨
+        </p>
+      </div>
     </div>
   );
 };
