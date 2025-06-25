@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -26,7 +25,6 @@ const Loading = () => {
       setProgress(prev => {
         const newProgress = prev + 2;
         
-        // Atualizar step baseado no progresso
         const stepIndex = Math.floor((newProgress / 100) * steps.length);
         if (stepIndex < steps.length) {
           setCurrentStep(steps[stepIndex]);
@@ -56,7 +54,8 @@ const Loading = () => {
         'Histórico de 7 dias'
       ],
       color: 'from-gray-400 to-gray-600',
-      popular: false
+      popular: false,
+      checkoutUrl: null
     },
     {
       name: 'Pro',
@@ -71,7 +70,8 @@ const Loading = () => {
         'Suporte prioritário'
       ],
       color: 'from-waifu-pink to-waifu-purple',
-      popular: true
+      popular: true,
+      checkoutUrl: 'https://buy.stripe.com/14A6oJ9gV9IHb3BbTyafS0a'
     },
     {
       name: 'Ultra',
@@ -86,13 +86,22 @@ const Loading = () => {
         'Novidades em primeira mão'
       ],
       color: 'from-purple-500 to-pink-500',
-      popular: false
+      popular: false,
+      checkoutUrl: 'https://buy.stripe.com/9B6bJ30Kp1cb2x55vaafS09'
     }
   ];
 
-  const handlePlanSelect = (planName: string) => {
-    toast.success(`Plano ${planName} selecionado! 💕`);
-    setTimeout(() => navigate('/chat'), 1000);
+  const handlePlanSelect = (plan: any) => {
+    if (plan.checkoutUrl) {
+      toast.success(`Redirecionando para o checkout do plano ${plan.name}! 💕`);
+      // Abrir checkout do Stripe em nova aba
+      window.open(plan.checkoutUrl, '_blank');
+      // Aguardar um pouco e redirecionar para o chat
+      setTimeout(() => navigate('/dashboard'), 2000);
+    } else {
+      toast.success(`Plano ${plan.name} selecionado! 💕`);
+      setTimeout(() => navigate('/dashboard'), 1000);
+    }
   };
 
   if (!showPlans) {
@@ -197,7 +206,7 @@ const Loading = () => {
               </ul>
 
               <Button 
-                onClick={() => handlePlanSelect(plan.name)}
+                onClick={() => handlePlanSelect(plan)}
                 className={`w-full py-3 text-lg font-semibold transition-all duration-300 ${
                   plan.popular 
                     ? 'bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple text-white' 
@@ -216,7 +225,7 @@ const Loading = () => {
             💡 Você pode alterar ou cancelar seu plano a qualquer momento
           </p>
           <Button 
-            onClick={() => navigate('/chat')}
+            onClick={() => navigate('/dashboard')}
             variant="ghost"
             className="text-waifu-purple hover:bg-waifu-lightPink/50"
           >

@@ -11,18 +11,17 @@ import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
 import Loading from "./pages/Loading";
 import Chat from "./pages/Chat";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Enhanced auth check with Supabase
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -31,7 +30,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -71,6 +69,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Loading />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
               </ProtectedRoute>
             } 
           />
