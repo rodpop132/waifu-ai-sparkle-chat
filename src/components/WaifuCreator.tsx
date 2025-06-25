@@ -1,23 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { X, Upload, Sparkles } from 'lucide-react';
+import { X, Upload, Sparkles, Heart, Star, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface WaifuCreatorProps {
   onClose: () => void;
   onSave: (waifuData: WaifuData) => void;
-  initialData?: {
-    name: string;
-    personality: string;
-    description: string;
-    avatar: string;
-  };
+  initialData?: WaifuData;
   isEditing?: boolean;
 }
 
@@ -30,52 +25,49 @@ interface WaifuData {
   voiceStyle: string;
 }
 
-const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave, initialData, isEditing = false }) => {
-  const [waifuData, setWaifuData] = useState<WaifuData>({
-    name: initialData?.name || '',
-    personality: initialData?.personality || 'doce',
-    description: initialData?.description || '',
-    avatar: initialData?.avatar || '',
-    traits: [],
-    voiceStyle: 'carinhosa'
-  });
+const WaifuCreator: React.FC<WaifuCreatorProps> = ({
+  onClose,
+  onSave,
+  initialData,
+  isEditing = false
+}) => {
+  const [waifuData, setWaifuData] = useState<WaifuData>(
+    initialData || {
+      name: '',
+      personality: 'doce',
+      description: '',
+      avatar: '',
+      traits: [],
+      voiceStyle: 'feminina'
+    }
+  );
+  const [avatarPreview, setAvatarPreview] = useState<string>(initialData?.avatar || '');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const personalities = [
-    { id: 'doce', name: 'Doce', description: 'Gentil e carinhosa 💕', color: 'bg-pink-100 text-pink-800' },
-    { id: 'tsundere', name: 'Tsundere', description: 'Orgulhosa mas fofa 😤💖', color: 'bg-red-100 text-red-800' },
-    { id: 'kawaii', name: 'Kawaii', description: 'Super fofa e energética 🥰✨', color: 'bg-yellow-100 text-yellow-800' },
-    { id: 'misteriosa', name: 'Misteriosa', description: 'Elegante e enigmática 🌙', color: 'bg-purple-100 text-purple-800' },
-    { id: 'ciumenta', name: 'Ciumenta', description: 'Possessiva e apaixonada 😏💔', color: 'bg-green-100 text-green-800' },
-    { id: 'timida', name: 'Tímida', description: 'Reservada e inocente 😊🌸', color: 'bg-blue-100 text-blue-800' }
+    { id: 'doce', label: 'Doce', icon: Heart, color: 'from-pink-400 to-pink-600' },
+    { id: 'timida', label: 'Tímida', icon: Heart, color: 'from-purple-400 to-purple-600' },
+    { id: 'energetica', label: 'Energética', icon: Zap, color: 'from-yellow-400 to-orange-500' },
+    { id: 'misteriosa', label: 'Misteriosa', icon: Star, color: 'from-indigo-400 to-purple-600' },
+    { id: 'carinhosa', label: 'Carinhosa', icon: Heart, color: 'from-red-400 to-pink-500' },
+    { id: 'brincalhona', label: 'Brincalhona', icon: Sparkles, color: 'from-green-400 to-blue-500' }
   ];
 
-  const commonTraits = [
-    'Romântica', 'Cuidadosa', 'Brincalhona', 'Inteligente', 'Energética',
-    'Elegante', 'Fofa', 'Orgulhosa', 'Alegre', 'Carinhosa', 'Protetora'
+  const availableTraits = [
+    'Inteligente', 'Engraçada', 'Romântica', 'Aventureira', 'Criativa',
+    'Gentil', 'Determinada', 'Otimista', 'Leal', 'Curiosa'
   ];
 
   const voiceStyles = [
-    { id: 'carinhosa', name: 'Carinhosa', description: 'Voz doce e amorosa' },
-    { id: 'energetica', name: 'Energética', description: 'Voz animada e vibrante' },
-    { id: 'calma', name: 'Calma', description: 'Voz suave e tranquila' },
-    { id: 'sedutora', name: 'Sedutora', description: 'Voz sensual e misteriosa' }
+    { id: 'feminina', label: 'Feminina Suave' },
+    { id: 'jovem', label: 'Jovem Alegre' },
+    { id: 'madura', label: 'Madura Carinhosa' },
+    { id: 'anime', label: 'Estilo Anime' }
   ];
 
-  const handleTraitToggle = (trait: string) => {
-    setWaifuData(prev => ({
-      ...prev,
-      traits: prev.traits.includes(trait)
-        ? prev.traits.filter(t => t !== trait)
-        : prev.traits.length < 5 
-          ? [...prev.traits, trait]
-          : prev.traits
-    }));
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Verificar tamanho do arquivo (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Imagem muito grande! Máximo 5MB');
         return;
@@ -83,18 +75,31 @@ const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave, initialDat
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        setWaifuData(prev => ({
-          ...prev,
-          avatar: e.target?.result as string
-        }));
+        const result = e.target?.result as string;
+        setAvatarPreview(result);
+        setWaifuData(prev => ({ ...prev, avatar: result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const toggleTrait = (trait: string) => {
+    setWaifuData(prev => ({
+      ...prev,
+      traits: prev.traits.includes(trait)
+        ? prev.traits.filter(t => t !== trait)
+        : [...prev.traits, trait]
+    }));
+  };
+
   const handleSave = () => {
     if (!waifuData.name.trim()) {
-      toast.error('Por favor, dê um nome para sua waifu! 💕');
+      toast.error('Por favor, digite um nome para sua waifu');
+      return;
+    }
+
+    if (!waifuData.description.trim()) {
+      toast.error('Por favor, adicione uma descrição para sua waifu');
       return;
     }
 
@@ -102,183 +107,215 @@ const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave, initialDat
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-4xl bg-white/95 backdrop-blur-sm max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-waifu-pink to-waifu-purple bg-clip-text text-transparent flex items-center gap-2">
-              <Sparkles className="w-8 h-8 text-waifu-pink" />
-              {isEditing ? 'Editar Sua Waifu' : 'Criar Sua Waifu Personalizada'}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-waifu-pink to-waifu-purple bg-clip-text text-transparent">
+              {isEditing ? 'Editar Waifu' : 'Criar Nova Waifu'}
             </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-waifu-purple hover:bg-waifu-lightPink"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <p className="text-gray-600 mt-1">
+              {isEditing ? 'Modifique sua waifu como desejar' : 'Personalize sua companheira virtual perfeita'}
+            </p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Basic Info */}
-            <div className="space-y-6">
-              {/* Avatar Upload */}
-              <div className="text-center">
-                <div className="relative inline-block mb-4">
-                  <Avatar className="w-32 h-32 border-4 border-waifu-pink">
-                    {waifuData.avatar ? (
-                      <AvatarImage src={waifuData.avatar} alt="Waifu Avatar" className="object-cover" />
+        <div className="p-6 grid md:grid-cols-2 gap-8">
+          {/* Left Column - Basic Info */}
+          <div className="space-y-6">
+            {/* Avatar Upload */}
+            <Card className="p-6">
+              <Label className="text-base font-semibold text-waifu-purple mb-4 block">
+                Foto de Perfil
+              </Label>
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-r from-waifu-pink to-waifu-purple flex items-center justify-center">
+                    {avatarPreview ? (
+                      <img 
+                        src={avatarPreview} 
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <AvatarFallback className="bg-gradient-to-r from-waifu-pink to-waifu-purple text-white text-4xl">
-                        {waifuData.name.charAt(0) || '💖'}
-                      </AvatarFallback>
+                      <div className="text-4xl text-white">🥰</div>
                     )}
-                  </Avatar>
-                  <label className="absolute bottom-0 right-0 bg-waifu-pink text-white p-2 rounded-full cursor-pointer hover:bg-waifu-accent transition-colors">
-                    <Upload className="w-4 h-4" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </label>
+                  </div>
                 </div>
-                <p className="text-sm text-waifu-purple/70">
-                  Clique no ícone para adicionar uma foto da sua waifu
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  className="border-waifu-pink text-waifu-purple hover:bg-waifu-lightPink"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Escolher Foto
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+                <p className="text-xs text-gray-500 text-center">
+                  JPG, PNG até 5MB
                 </p>
               </div>
+            </Card>
 
-              {/* Name */}
+            {/* Basic Info */}
+            <Card className="p-6 space-y-4">
+              <Label className="text-base font-semibold text-waifu-purple">
+                Informações Básicas
+              </Label>
+              
               <div>
-                <Label htmlFor="name" className="text-waifu-purple font-semibold">
-                  Nome da Waifu *
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  Nome da Waifu
                 </Label>
                 <Input
                   id="name"
-                  placeholder="Ex: Sakura, Yuki, Akira..."
                   value={waifuData.name}
                   onChange={(e) => setWaifuData(prev => ({ ...prev, name: e.target.value }))}
-                  className="mt-2 border-waifu-pink/30 focus:border-waifu-pink"
+                  placeholder="Ex: Sakura, Yuki, Akira..."
+                  className="mt-1 border-waifu-pink/30 focus:border-waifu-pink"
                 />
               </div>
 
-              {/* Description */}
               <div>
-                <Label htmlFor="description" className="text-waifu-purple font-semibold">
-                  Descrição Personalizada
+                <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+                  Descrição
                 </Label>
-                <textarea
+                <Textarea
                   id="description"
-                  placeholder="Descreva sua waifu... seus gostos, personalidade, história..."
                   value={waifuData.description}
                   onChange={(e) => setWaifuData(prev => ({ ...prev, description: e.target.value }))}
-                  className="mt-2 w-full p-3 border border-waifu-pink/30 rounded-md focus:border-waifu-pink focus:ring-waifu-pink/20 resize-none"
+                  placeholder="Descreva como ela é, o que gosta de fazer, seus hobbies..."
                   rows={4}
+                  className="mt-1 border-waifu-pink/30 focus:border-waifu-pink resize-none"
                 />
               </div>
-            </div>
+            </Card>
+          </div>
 
-            {/* Right Column - Personality & Traits */}
-            <div className="space-y-6">
-              {/* Personality */}
-              <div>
-                <Label className="text-waifu-purple font-semibold mb-3 block">
-                  Personalidade Principal
-                </Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {personalities.map((personality) => (
-                    <div
+          {/* Right Column - Personality & Traits */}
+          <div className="space-y-6">
+            {/* Personality */}
+            <Card className="p-6">
+              <Label className="text-base font-semibold text-waifu-purple mb-4 block">
+                Personalidade Principal
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                {personalities.map((personality) => {
+                  const IconComponent = personality.icon;
+                  const isSelected = waifuData.personality === personality.id;
+                  
+                  return (
+                    <Button
                       key={personality.id}
+                      variant={isSelected ? "default" : "outline"}
                       onClick={() => setWaifuData(prev => ({ ...prev, personality: personality.id }))}
-                      className={`p-3 rounded-lg cursor-pointer transition-all border-2 ${
-                        waifuData.personality === personality.id
-                          ? 'border-waifu-pink bg-waifu-lightPink/30'
-                          : 'border-gray-200 hover:border-waifu-pink/50'
+                      className={`p-4 h-auto flex flex-col gap-2 ${
+                        isSelected 
+                          ? `bg-gradient-to-r ${personality.color} text-white border-0` 
+                          : 'border-waifu-pink/30 hover:bg-waifu-lightPink/50'
                       }`}
                     >
-                      <Badge className={`${personality.color} mb-2`}>
-                        {personality.name}
-                      </Badge>
-                      <p className="text-xs text-gray-600">{personality.description}</p>
-                    </div>
-                  ))}
-                </div>
+                      <IconComponent className="w-5 h-5" />
+                      <span className="text-sm font-medium">{personality.label}</span>
+                    </Button>
+                  );
+                })}
               </div>
+            </Card>
 
-              {/* Traits */}
-              <div>
-                <Label className="text-waifu-purple font-semibold mb-3 block">
-                  Características Extras (máximo 5)
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {commonTraits.map((trait) => (
+            {/* Traits */}
+            <Card className="p-6">
+              <Label className="text-base font-semibold text-waifu-purple mb-4 block">
+                Características (máx. 5)
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {availableTraits.map((trait) => {
+                  const isSelected = waifuData.traits.includes(trait);
+                  const canSelect = waifuData.traits.length < 5 || isSelected;
+                  
+                  return (
                     <Badge
                       key={trait}
-                      variant={waifuData.traits.includes(trait) ? 'default' : 'outline'}
+                      variant={isSelected ? "default" : "outline"}
                       className={`cursor-pointer transition-all ${
-                        waifuData.traits.includes(trait)
-                          ? 'bg-waifu-pink text-white hover:bg-waifu-accent'
-                          : 'border-waifu-pink text-waifu-purple hover:bg-waifu-lightPink'
-                      } ${waifuData.traits.length >= 5 && !waifuData.traits.includes(trait) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={() => handleTraitToggle(trait)}
+                        isSelected 
+                          ? 'bg-gradient-to-r from-waifu-pink to-waifu-purple text-white' 
+                          : canSelect 
+                            ? 'border-waifu-pink/30 hover:bg-waifu-lightPink/50' 
+                            : 'opacity-50 cursor-not-allowed'
+                      }`}
+                      onClick={() => canSelect && toggleTrait(trait)}
                     >
                       {trait}
                     </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-waifu-purple/60 mt-2">
-                  Selecionadas: {waifuData.traits.length}/5
-                </p>
+                  );
+                })}
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Selecionadas: {waifuData.traits.length}/5
+              </p>
+            </Card>
 
-              {/* Voice Style */}
-              <div>
-                <Label className="text-waifu-purple font-semibold mb-3 block">
-                  Estilo de Voz
-                </Label>
-                <div className="space-y-2">
-                  {voiceStyles.map((voice) => (
-                    <div
-                      key={voice.id}
-                      onClick={() => setWaifuData(prev => ({ ...prev, voiceStyle: voice.id }))}
-                      className={`p-3 rounded-lg cursor-pointer transition-all border-2 ${
-                        waifuData.voiceStyle === voice.id
-                          ? 'border-waifu-pink bg-waifu-lightPink/30'
-                          : 'border-gray-200 hover:border-waifu-pink/50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-waifu-purple">{voice.name}</span>
-                        <span className="text-xs text-gray-600">{voice.description}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Voice Style */}
+            <Card className="p-6">
+              <Label className="text-base font-semibold text-waifu-purple mb-4 block">
+                Estilo de Voz
+              </Label>
+              <div className="space-y-2">
+                {voiceStyles.map((voice) => (
+                  <label
+                    key={voice.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50"
+                  >
+                    <input
+                      type="radio"
+                      name="voiceStyle"
+                      value={voice.id}
+                      checked={waifuData.voiceStyle === voice.id}
+                      onChange={(e) => setWaifuData(prev => ({ ...prev, voiceStyle: e.target.value }))}
+                      className="text-waifu-pink focus:ring-waifu-pink"
+                    />
+                    <span className="text-sm font-medium">{voice.label}</span>
+                  </label>
+                ))}
               </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="border-waifu-pink text-waifu-purple hover:bg-waifu-lightPink"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSave}
-              className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple text-white px-8"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              {isEditing ? 'Salvar Alterações' : 'Criar Waifu'}
-            </Button>
+            </Card>
           </div>
         </div>
-      </Card>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            {isEditing ? 'Salvar Alterações' : 'Criar Waifu'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

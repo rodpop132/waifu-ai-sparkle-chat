@@ -15,6 +15,8 @@ export type Database = {
           id: string
           updated_at: string
           user_id: string
+          waifu_avatar: string | null
+          waifu_description: string | null
           waifu_name: string
           waifu_personality: string
         }
@@ -23,6 +25,8 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id: string
+          waifu_avatar?: string | null
+          waifu_description?: string | null
           waifu_name?: string
           waifu_personality?: string
         }
@@ -31,6 +35,8 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+          waifu_avatar?: string | null
+          waifu_description?: string | null
           waifu_name?: string
           waifu_personality?: string
         }

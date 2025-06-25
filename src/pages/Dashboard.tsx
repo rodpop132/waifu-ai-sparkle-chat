@@ -110,7 +110,6 @@ const Dashboard = () => {
   };
 
   const createNewConversation = () => {
-    // Abrir o criador de waifu em vez de criar conversa diretamente
     setEditingWaifu(null);
     setShowWaifuCreator(true);
   };
@@ -302,7 +301,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-r from-waifu-pink to-waifu-purple">
-                      {conversation.waifu_avatar ? (
+                      {conversation.waifu_avatar && conversation.waifu_avatar.startsWith('http') ? (
                         <img 
                           src={conversation.waifu_avatar} 
                           alt={conversation.waifu_name}
@@ -310,7 +309,7 @@ const Dashboard = () => {
                         />
                       ) : (
                         <span className="text-white text-sm font-bold">
-                          {conversation.waifu_name.charAt(0)}
+                          {conversation.waifu_avatar || conversation.waifu_name.charAt(0)}
                         </span>
                       )}
                     </div>
