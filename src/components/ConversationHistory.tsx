@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,31 +38,34 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversationI
   }, [conversationId]);
 
   const initializeSpeechRecognition = () => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
+    if (typeof window !== 'undefined') {
+      const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
       
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'pt-BR';
-      
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInputMessage(transcript);
-        setIsRecording(false);
-      };
-      
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsRecording(false);
-        toast.error('Erro no reconhecimento de voz');
-      };
-      
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-      
-      setRecognition(recognition);
+      if (SpeechRecognitionClass) {
+        const recognition = new SpeechRecognitionClass();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'pt-BR';
+        
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setInputMessage(transcript);
+          setIsRecording(false);
+        };
+        
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          setIsRecording(false);
+          toast.error('Erro no reconhecimento de voz');
+        };
+        
+        recognition.onend = () => {
+          setIsRecording(false);
+        };
+        
+        setRecognition(recognition);
+      }
     }
   };
 
