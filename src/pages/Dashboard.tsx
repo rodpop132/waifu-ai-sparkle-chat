@@ -27,6 +27,8 @@ interface Conversation {
   id: string;
   waifu_name: string;
   waifu_personality: string;
+  waifu_avatar?: string;
+  waifu_description?: string;
   created_at: string;
   updated_at: string;
 }
@@ -40,11 +42,21 @@ interface UserProfile {
   messages_limit: number;
 }
 
+interface WaifuData {
+  name: string;
+  personality: string;
+  description: string;
+  avatar: string;
+  traits: string[];
+  voiceStyle: string;
+}
+
 const Dashboard = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [showWaifuCreator, setShowWaifuCreator] = useState(false);
+  const [editingWaifu, setEditingWaifu] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -97,32 +109,72 @@ const Dashboard = () => {
     }
   };
 
-  const createNewConversation = async () => {
+  const createNewConversation = () => {
+    // Abrir o criador de waifu em vez de criar conversa diretamente
+    setEditingWaifu(null);
+    setShowWaifuCreator(true);
+  };
+
+  const handleWaifuSave = async (waifuData: WaifuData) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('conversations')
-        .insert([
-          {
-            user_id: user.id,
-            waifu_name: 'Sakura',
-            waifu_personality: 'doce'
-          }
-        ])
-        .select()
-        .single();
+      if (editingWaifu) {
+        // Atualizar waifu existente
+        const { data, error } = await supabase
+          .from('conversations')
+          .update({
+            waifu_name: waifuData.name,
+            waifu_personality: waifuData.personality,
+            waifu_avatar: waifuData.avatar,
+            waifu_description: waifuData.description,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingWaifu)
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
+        
+        setConversations(prev => prev.map(conv => 
+          conv.id === editingWaifu ? { ...conv, ...data } : conv
+        ));
+        toast.success('Waifu atualizada com sucesso! 💖');
+      } else {
+        // Criar nova conversa com waifu personalizada
+        const { data, error } = await supabase
+          .from('conversations')
+          .insert([
+            {
+              user_id: user.id,
+              waifu_name: waifuData.name,
+              waifu_personality: waifuData.personality,
+              waifu_avatar: waifuData.avatar,
+              waifu_description: waifuData.description
+            }
+          ])
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        setConversations(prev => [data, ...prev]);
+        setSelectedConversation(data.id);
+        toast.success('Nova waifu criada com sucesso! 💕');
+      }
       
-      setConversations(prev => [data, ...prev]);
-      setSelectedConversation(data.id);
-      navigate(`/chat?conversation=${data.id}`);
+      setShowWaifuCreator(false);
+      setEditingWaifu(null);
     } catch (error) {
-      console.error('Erro ao criar conversa:', error);
-      toast.error('Erro ao criar nova conversa');
+      console.error('Erro ao salvar waifu:', error);
+      toast.error('Erro ao salvar waifu');
     }
+  };
+
+  const editWaifu = (conversationId: string) => {
+    setEditingWaifu(conversationId);
+    setShowWaifuCreator(true);
   };
 
   const deleteConversation = async (conversationId: string) => {
@@ -135,6 +187,9 @@ const Dashboard = () => {
       if (error) throw error;
       
       setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+      if (selectedConversation === conversationId) {
+        setSelectedConversation(null);
+      }
       toast.success('Conversa deletada com sucesso');
     } catch (error) {
       console.error('Erro ao deletar conversa:', error);
@@ -161,6 +216,29 @@ const Dashboard = () => {
       case 'ultra': return 'from-purple-500 to-pink-500';
       default: return 'from-gray-400 to-gray-600';
     }
+  };
+
+  const getCurrentWaifu = () => {
+    const conversation = conversations.find(conv => conv.id === selectedConversation);
+    if (conversation) {
+      return {
+        name: conversation.waifu_name,
+        personality: conversation.waifu_personality,
+        avatar: conversation.waifu_avatar || getWaifuAvatar(conversation.waifu_name),
+        description: conversation.waifu_description || ''
+      };
+    }
+    return null;
+  };
+
+  const getWaifuAvatar = (name: string) => {
+    const avatars: Record<string, string> = {
+      'Sakura': '🌸',
+      'Yuki': '❄️',
+      'Akira': '⚡',
+      'Rei': '🌙'
+    };
+    return avatars[name] || '💖';
   };
 
   if (loading) {
@@ -192,7 +270,7 @@ const Dashboard = () => {
               className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Nova Conversa
+              Nova Waifu
             </Button>
           </div>
           
@@ -219,15 +297,22 @@ const Dashboard = () => {
                     ? 'border-waifu-pink bg-waifu-lightPink/20' 
                     : 'hover:border-waifu-pink/30'
                 }`}
-                onClick={() => {
-                  setSelectedConversation(conversation.id);
-                  navigate(`/chat?conversation=${conversation.id}`);
-                }}
+                onClick={() => setSelectedConversation(conversation.id)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      {conversation.waifu_name.charAt(0)}
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-r from-waifu-pink to-waifu-purple">
+                      {conversation.waifu_avatar ? (
+                        <img 
+                          src={conversation.waifu_avatar} 
+                          alt={conversation.waifu_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white text-sm font-bold">
+                          {conversation.waifu_name.charAt(0)}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <p className="font-medium text-sm text-gray-900">
@@ -244,7 +329,7 @@ const Dashboard = () => {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Abrir editor de waifu
+                        editWaifu(conversation.id);
                       }}
                       className="p-1 h-auto"
                     >
@@ -319,15 +404,6 @@ const Dashboard = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowWaifuCreator(true)}
-              className="flex-1"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Criar Waifu
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={() => navigate('/loading')}
               className="flex-1"
             >
@@ -352,14 +428,14 @@ const Dashboard = () => {
                 Bem-vindo ao Waifu AI Chat!
               </h2>
               <p className="text-waifu-purple/70 mb-6">
-                Selecione uma conversa existente ou crie uma nova para começar a conversar com sua waifu 💖
+                Crie sua waifu personalizada e comece a conversar com ela! 💖
               </p>
               <Button
                 onClick={createNewConversation}
                 className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Começar Nova Conversa
+                <Sparkles className="w-4 h-4 mr-2" />
+                Criar Minha Waifu
               </Button>
             </div>
           </div>
@@ -369,12 +445,13 @@ const Dashboard = () => {
       {/* Waifu Creator Modal */}
       {showWaifuCreator && (
         <WaifuCreator
-          onClose={() => setShowWaifuCreator(false)}
-          onSave={(waifuData) => {
-            // Salvar dados da waifu e atualizar conversa
+          onClose={() => {
             setShowWaifuCreator(false);
-            toast.success('Waifu criada com sucesso! 💖');
+            setEditingWaifu(null);
           }}
+          onSave={handleWaifuSave}
+          initialData={editingWaifu ? getCurrentWaifu() : undefined}
+          isEditing={!!editingWaifu}
         />
       )}
     </div>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,16 +11,32 @@ import { toast } from 'sonner';
 
 interface WaifuCreatorProps {
   onClose: () => void;
-  onSave: (waifuData: any) => void;
+  onSave: (waifuData: WaifuData) => void;
+  initialData?: {
+    name: string;
+    personality: string;
+    description: string;
+    avatar: string;
+  };
+  isEditing?: boolean;
 }
 
-const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave }) => {
-  const [waifuData, setWaifuData] = useState({
-    name: '',
-    personality: 'doce',
-    description: '',
-    avatar: '',
-    traits: [] as string[],
+interface WaifuData {
+  name: string;
+  personality: string;
+  description: string;
+  avatar: string;
+  traits: string[];
+  voiceStyle: string;
+}
+
+const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave, initialData, isEditing = false }) => {
+  const [waifuData, setWaifuData] = useState<WaifuData>({
+    name: initialData?.name || '',
+    personality: initialData?.personality || 'doce',
+    description: initialData?.description || '',
+    avatar: initialData?.avatar || '',
+    traits: [],
     voiceStyle: 'carinhosa'
   });
 
@@ -50,13 +66,21 @@ const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave }) => {
       ...prev,
       traits: prev.traits.includes(trait)
         ? prev.traits.filter(t => t !== trait)
-        : [...prev.traits, trait]
+        : prev.traits.length < 5 
+          ? [...prev.traits, trait]
+          : prev.traits
     }));
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Verificar tamanho do arquivo (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Imagem muito grande! Máximo 5MB');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setWaifuData(prev => ({
@@ -84,7 +108,7 @@ const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave }) => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-waifu-pink to-waifu-purple bg-clip-text text-transparent flex items-center gap-2">
               <Sparkles className="w-8 h-8 text-waifu-pink" />
-              Criar Sua Waifu Personalizada
+              {isEditing ? 'Editar Sua Waifu' : 'Criar Sua Waifu Personalizada'}
             </h2>
             <Button
               variant="ghost"
@@ -104,7 +128,7 @@ const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave }) => {
                 <div className="relative inline-block mb-4">
                   <Avatar className="w-32 h-32 border-4 border-waifu-pink">
                     {waifuData.avatar ? (
-                      <AvatarImage src={waifuData.avatar} alt="Waifu Avatar" />
+                      <AvatarImage src={waifuData.avatar} alt="Waifu Avatar" className="object-cover" />
                     ) : (
                       <AvatarFallback className="bg-gradient-to-r from-waifu-pink to-waifu-purple text-white text-4xl">
                         {waifuData.name.charAt(0) || '💖'}
@@ -197,7 +221,7 @@ const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave }) => {
                         waifuData.traits.includes(trait)
                           ? 'bg-waifu-pink text-white hover:bg-waifu-accent'
                           : 'border-waifu-pink text-waifu-purple hover:bg-waifu-lightPink'
-                      }`}
+                      } ${waifuData.traits.length >= 5 && !waifuData.traits.includes(trait) ? 'opacity-50 cursor-not-allowed' : ''}`}
                       onClick={() => handleTraitToggle(trait)}
                     >
                       {trait}
@@ -250,7 +274,7 @@ const WaifuCreator: React.FC<WaifuCreatorProps> = ({ onClose, onSave }) => {
               className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple text-white px-8"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Criar Waifu
+              {isEditing ? 'Salvar Alterações' : 'Criar Waifu'}
             </Button>
           </div>
         </div>

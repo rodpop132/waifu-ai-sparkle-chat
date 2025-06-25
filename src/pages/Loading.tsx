@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -117,6 +118,25 @@ const Loading = () => {
           <div className="absolute top-1/3 right-1/3 text-4xl animate-float delay-300">🌟</div>
         </div>
 
+        {/* Beautiful waifu images */}
+        <div className="absolute inset-0 pointer-events-none opacity-20">
+          <img 
+            src="/lovable-uploads/8e699549-fcb6-4cea-ae48-b2384ccaea42.png" 
+            alt="Waifu 1"
+            className="absolute top-10 left-10 w-32 h-40 object-cover rounded-lg animate-float"
+          />
+          <img 
+            src="/lovable-uploads/95efa191-8c38-4b0a-a0d0-d831e0cba45d.png" 
+            alt="Waifu 2"
+            className="absolute top-20 right-10 w-32 h-40 object-cover rounded-lg animate-float delay-1000"
+          />
+          <img 
+            src="/lovable-uploads/63051b71-f338-4bc9-b165-70ca1907a2c2.png" 
+            alt="Waifu 3"
+            className="absolute bottom-20 left-20 w-32 h-40 object-cover rounded-lg animate-float delay-500"
+          />
+        </div>
+
         <div className="text-center z-10 max-w-md mx-auto p-8">
           <div className="mb-8">
             <div className="w-32 h-32 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-heart">
@@ -156,6 +176,25 @@ const Loading = () => {
         <div className="absolute top-20 right-10 text-3xl animate-float delay-500">💖</div>
         <div className="absolute bottom-20 left-10 text-4xl animate-float delay-1000">✨</div>
         <div className="absolute bottom-10 right-20 text-3xl animate-float delay-1500">🥰</div>
+      </div>
+
+      {/* Beautiful waifu images in background */}
+      <div className="absolute inset-0 pointer-events-none opacity-15">
+        <img 
+          src="/lovable-uploads/8e699549-fcb6-4cea-ae48-b2384ccaea42.png" 
+          alt="Waifu Background 1"
+          className="absolute top-5 left-5 w-40 h-50 object-cover rounded-lg animate-float"
+        />
+        <img 
+          src="/lovable-uploads/95efa191-8c38-4b0a-a0d0-d831e0cba45d.png" 
+          alt="Waifu Background 2"
+          className="absolute top-10 right-5 w-40 h-50 object-cover rounded-lg animate-float delay-700"
+        />
+        <img 
+          src="/lovable-uploads/63051b71-f338-4bc9-b165-70ca1907a2c2.png" 
+          alt="Waifu Background 3"
+          className="absolute bottom-5 left-1/2 transform -translate-x-1/2 w-40 h-50 object-cover rounded-lg animate-float delay-1200"
+        />
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
