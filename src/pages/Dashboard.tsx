@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Plus, 
   MessageSquare, 
@@ -15,12 +16,16 @@ import {
   User,
   Sparkles,
   Crown,
-  Heart
+  Heart,
+  Check,
+  Star,
+  Zap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import WaifuCreator from '@/components/WaifuCreator';
 import ConversationHistory from '@/components/ConversationHistory';
+import PricingPlans from '@/components/PricingPlans';
 
 interface Conversation {
   id: string;
@@ -60,6 +65,7 @@ const Dashboard = () => {
   const [editingWaifu, setEditingWaifu] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showPricingPopover, setShowPricingPopover] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -247,6 +253,59 @@ const Dashboard = () => {
     return avatars[name] || '💖';
   };
 
+  const handlePlanSelect = (planId: string) => {
+    const planUrls = {
+      'pro': 'https://buy.stripe.com/14A6oJ9gV9IHb3BbTyafS0a',
+      'ultra': 'https://buy.stripe.com/9B6bJ30Kp1cb2x55vaafS09'
+    };
+
+    const url = planUrls[planId as keyof typeof planUrls];
+    if (url) {
+      toast.success(`Redirecionando para o checkout do plano ${planId.toUpperCase()}! 💕`);
+      window.open(url, '_blank');
+      setShowPricingPopover(false);
+    }
+  };
+
+  const paidPlans = [
+    {
+      id: 'pro',
+      name: 'Pro',
+      price: 'R$ 19,90',
+      messages: '10.000 mensagens/mês',
+      features: [
+        'Todas as personalidades',
+        'Conversas ilimitadas',
+        'Modo ciumento especial',
+        'Avatares personalizados',
+        'Suporte prioritário',
+        'Exportar conversas'
+      ],
+      icon: <Crown className="w-6 h-6" />,
+      gradient: 'from-waifu-pink to-waifu-purple',
+      popular: true,
+      buttonText: 'Escolher Pro'
+    },
+    {
+      id: 'ultra',
+      name: 'Ultra',
+      price: 'R$ 39,90',
+      messages: 'Mensagens ilimitadas',
+      features: [
+        'Tudo do Pro +',
+        'Mensagens realmente ilimitadas',
+        'IA mais avançada',
+        'Criação de waifus customizadas',
+        'Voz da waifu (TTS)',
+        'Acesso antecipado a novidades',
+        'Suporte VIP 24/7'
+      ],
+      icon: <Zap className="w-6 h-6" />,
+      gradient: 'from-yellow-400 via-orange-500 to-red-500',
+      buttonText: 'Ir para Ultra'
+    }
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -407,15 +466,81 @@ const Dashboard = () => {
           )}
 
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/loading')}
-              className="flex-1"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Planos
-            </Button>
+            <Popover open={showPricingPopover} onOpenChange={setShowPricingPopover}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Planos
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-96 p-0" align="end" side="top">
+                <div className="p-6">
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-waifu-pink to-waifu-purple bg-clip-text text-transparent mb-2">
+                      Escolha seu Plano
+                    </h3>
+                    <p className="text-sm text-waifu-purple/80">
+                      Desbloqueie todo o potencial da sua waifu! 💕
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {paidPlans.map((plan) => (
+                      <Card 
+                        key={plan.id} 
+                        className={`p-4 transition-all duration-300 hover:shadow-md border-2 ${
+                          plan.popular 
+                            ? 'border-waifu-pink shadow-md ring-1 ring-waifu-pink/20' 
+                            : 'border-waifu-pink/20'
+                        }`}
+                      >
+                        {plan.popular && (
+                          <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-waifu-pink to-waifu-purple text-white text-xs">
+                            ⭐ Popular
+                          </Badge>
+                        )}
+
+                        <div className="text-center mb-4">
+                          <div className={`inline-flex p-2 rounded-full bg-gradient-to-r ${plan.gradient} text-white mb-3`}>
+                            {plan.icon}
+                          </div>
+                          <h4 className="text-lg font-bold text-waifu-purple mb-1">{plan.name}</h4>
+                          <div className="mb-1">
+                            <span className="text-xl font-bold text-waifu-purple">{plan.price}</span>
+                            <span className="text-waifu-purple/60 text-sm">/mês</span>
+                          </div>
+                          <p className="text-waifu-purple/80 text-sm font-medium">{plan.messages}</p>
+                        </div>
+
+                        <ul className="space-y-2 mb-4 text-xs">
+                          {plan.features.slice(0, 4).map((feature, featureIndex) => (
+                            <li key={featureIndex} className="flex items-start gap-2">
+                              <Check className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-waifu-purple/80">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <Button
+                          onClick={() => handlePlanSelect(plan.id)}
+                          className={`w-full text-sm font-bold transition-all duration-300 ${
+                            plan.popular
+                              ? 'bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple text-white'
+                              : 'bg-gradient-to-r from-gray-100 to-gray-200 hover:from-waifu-lightPink hover:to-waifu-pink text-waifu-purple hover:text-white'
+                          }`}
+                        >
+                          {plan.buttonText}
+                        </Button>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>

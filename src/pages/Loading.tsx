@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -44,20 +45,6 @@ const Loading = () => {
 
   const plans = [
     {
-      name: 'Gratuito',
-      price: 'R$ 0',
-      period: '/mês',
-      messages: '30 mensagens',
-      features: [
-        'Chat básico com waifu',
-        'Personalidades limitadas',
-        'Histórico de 7 dias'
-      ],
-      color: 'from-gray-400 to-gray-600',
-      popular: false,
-      checkoutUrl: null
-    },
-    {
       name: 'Pro',
       price: 'R$ 19,90',
       period: '/mês',
@@ -97,7 +84,6 @@ const Loading = () => {
       window.open(plan.checkoutUrl, '_blank');
       setTimeout(() => navigate('/dashboard'), 2000);
     } else {
-      toast.success(`Plano ${plan.name} selecionado! 💕`);
       setTimeout(() => navigate('/dashboard'), 1000);
     }
   };
@@ -118,17 +104,17 @@ const Loading = () => {
         {/* Beautiful waifu images */}
         <div className="absolute inset-0 pointer-events-none opacity-20">
           <img 
-            src="/lovable-uploads/image-1.png" 
+            src="/lovable-uploads/63051b71-f338-4bc9-b165-70ca1907a2c2.png" 
             alt="Waifu 1"
             className="absolute top-10 left-10 w-32 h-40 object-cover rounded-lg animate-float"
           />
           <img 
-            src="/lovable-uploads/image-2.png" 
+            src="/lovable-uploads/8e699549-fcb6-4cea-ae48-b2384ccaea42.png" 
             alt="Waifu 2"
             className="absolute top-20 right-10 w-32 h-40 object-cover rounded-lg animate-float delay-1000"
           />
           <img 
-            src="/lovable-uploads/image-3.png" 
+            src="/lovable-uploads/95efa191-8c38-4b0a-a0d0-d831e0cba45d.png" 
             alt="Waifu 3"
             className="absolute bottom-20 left-20 w-32 h-40 object-cover rounded-lg animate-float delay-500"
           />
@@ -178,23 +164,23 @@ const Loading = () => {
       {/* Beautiful waifu images in background */}
       <div className="absolute inset-0 pointer-events-none opacity-15">
         <img 
-          src="/lovable-uploads/image-1.png" 
+          src="/lovable-uploads/63051b71-f338-4bc9-b165-70ca1907a2c2.png" 
           alt="Waifu Background 1"
           className="absolute top-5 left-5 w-40 h-50 object-cover rounded-lg animate-float"
         />
         <img 
-          src="/lovable-uploads/image-2.png" 
+          src="/lovable-uploads/8e699549-fcb6-4cea-ae48-b2384ccaea42.png" 
           alt="Waifu Background 2"
           className="absolute top-10 right-5 w-40 h-50 object-cover rounded-lg animate-float delay-700"
         />
         <img 
-          src="/lovable-uploads/image-3.png" 
+          src="/lovable-uploads/95efa191-8c38-4b0a-a0d0-d831e0cba45d.png" 
           alt="Waifu Background 3"
           className="absolute bottom-5 left-1/2 transform -translate-x-1/2 w-40 h-50 object-cover rounded-lg animate-float delay-1200"
         />
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-4xl mx-auto relative z-10">
         <div className="text-center mb-12">
           <div className="w-20 h-20 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-heart">
             <div className="text-3xl">💕</div>
@@ -204,7 +190,7 @@ const Loading = () => {
           <p className="text-lg text-waifu-purple/70">Escolha seu plano e comece a conversar com ela agora:</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-8 max-w-3xl mx-auto">
           {plans.map((plan, index) => (
             <Card 
               key={plan.name} 
@@ -220,7 +206,6 @@ const Loading = () => {
               
               <div className="text-center mb-6">
                 <div className={`w-16 h-16 bg-gradient-to-r ${plan.color} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                  {plan.name === 'Gratuito' && <Heart className="w-8 h-8 text-white" />}
                   {plan.name === 'Pro' && <Star className="w-8 h-8 text-white" />}
                   {plan.name === 'Ultra' && <Sparkles className="w-8 h-8 text-white" />}
                 </div>
@@ -250,7 +235,7 @@ const Loading = () => {
                 }`}
                 variant={plan.popular ? 'default' : 'outline'}
               >
-                {plan.name === 'Gratuito' ? 'Começar Grátis' : `Escolher ${plan.name}`}
+                Escolher {plan.name}
               </Button>
             </Card>
           ))}
