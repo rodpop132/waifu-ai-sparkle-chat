@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,8 @@ interface Conversation {
   waifu_personality: string;
   waifu_avatar?: string;
   waifu_description?: string;
+  waifu_traits?: string[];
+  waifu_voice_style?: string;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +129,8 @@ const Dashboard = () => {
             waifu_personality: waifuData.personality,
             waifu_avatar: waifuData.avatar,
             waifu_description: waifuData.description,
+            waifu_traits: waifuData.traits,
+            waifu_voice_style: waifuData.voiceStyle,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingWaifu)
@@ -150,7 +153,9 @@ const Dashboard = () => {
               waifu_name: waifuData.name,
               waifu_personality: waifuData.personality,
               waifu_avatar: waifuData.avatar,
-              waifu_description: waifuData.description
+              waifu_description: waifuData.description,
+              waifu_traits: waifuData.traits,
+              waifu_voice_style: waifuData.voiceStyle
             }
           ])
           .select()
@@ -217,14 +222,16 @@ const Dashboard = () => {
     }
   };
 
-  const getCurrentWaifu = () => {
+  const getCurrentWaifu = (): WaifuData | null => {
     const conversation = conversations.find(conv => conv.id === selectedConversation);
     if (conversation) {
       return {
         name: conversation.waifu_name,
         personality: conversation.waifu_personality,
         avatar: conversation.waifu_avatar || getWaifuAvatar(conversation.waifu_name),
-        description: conversation.waifu_description || ''
+        description: conversation.waifu_description || '',
+        traits: conversation.waifu_traits || [],
+        voiceStyle: conversation.waifu_voice_style || 'feminina'
       };
     }
     return null;
