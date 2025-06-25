@@ -66,11 +66,14 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showPricingPopover, setShowPricingPopover] = useState(false);
+  const [paymentVerifying, setPaymentVerifying] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadUserData();
     loadConversations();
+    // Verificar pagamento quando a página carrega (caso o usuário tenha voltado do checkout)
+    verifyPayment();
   }, []);
 
   const loadUserData = async () => {
@@ -114,6 +117,50 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const verifyPayment = async () => {
+    try {
+      setPaymentVerifying(true);
+      const { data, error } = await supabase.functions.invoke('verify-payment');
+      
+      if (error) throw error;
+      
+      if (data.success) {
+        // Recarregar dados do usuário após verificação de pagamento
+        await loadUserData();
+        
+        if (data.plan_type !== 'free') {
+          toast.success(`Plano ${data.plan_type.toUpperCase()} ativado com sucesso! 🎉`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar pagamento:', error);
+    } finally {
+      setPaymentVerifying(false);
+    }
+  };
+
+  const canAccessConversations = () => {
+    if (!userProfile) return false;
+    
+    // Se for plano gratuito, verificar limite de mensagens
+    if (userProfile.plan_type === 'free') {
+      return userProfile.messages_used < userProfile.messages_limit;
+    }
+    
+    // Para planos pagos, sempre permitir acesso
+    return userProfile.plan_type === 'pro' || userProfile.plan_type === 'ultra';
+  };
+
+  const getMessageLimitWarning = () => {
+    if (!userProfile) return null;
+    
+    if (userProfile.plan_type === 'free' && userProfile.messages_used >= userProfile.messages_limit) {
+      return "Você atingiu o limite de mensagens do plano gratuito. Faça upgrade para continuar conversando! 💕";
+    }
+    
+    return null;
   };
 
   const createNewConversation = () => {
@@ -234,8 +281,8 @@ const Dashboard = () => {
       return {
         name: conversation.waifu_name,
         personality: conversation.waifu_personality,
-        avatar: conversation.waifu_avatar || getWaifuAvatar(conversation.waifu_name),
         description: conversation.waifu_description || '',
+        avatar: conversation.waifu_avatar || getWaifuAvatar(conversation.waifu_name),
         traits: conversation.waifu_traits || [],
         voiceStyle: conversation.waifu_voice_style || 'feminina'
       };
@@ -262,7 +309,9 @@ const Dashboard = () => {
     const url = planUrls[planId as keyof typeof planUrls];
     if (url) {
       toast.success(`Redirecionando para o checkout do plano ${planId.toUpperCase()}! 💕`);
-      window.open(url, '_blank');
+      // Adicionar parâmetros para rastreamento de retorno
+      const checkoutUrl = `${url}?client_reference_id=${userProfile?.id}`;
+      window.open(checkoutUrl, '_blank');
       setShowPricingPopover(false);
     }
   };
@@ -313,11 +362,15 @@ const Dashboard = () => {
           <div className="w-16 h-16 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-heart">
             <div className="text-2xl">🥰</div>
           </div>
-          <p className="text-waifu-purple font-medium">Carregando sua dashboard...</p>
+          <p className="text-waifu-purple font-medium">
+            {paymentVerifying ? 'Verificando status de pagamento...' : 'Carregando sua dashboard...'}
+          </p>
         </div>
       </div>
     );
   }
+
+  const messageLimitWarning = getMessageLimitWarning();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -332,12 +385,20 @@ const Dashboard = () => {
             <Button
               onClick={createNewConversation}
               size="sm"
-              className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple"
+              disabled={!canAccessConversations()}
+              className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nova Waifu
             </Button>
           </div>
+          
+          {/* Warning Message */}
+          {messageLimitWarning && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">{messageLimitWarning}</p>
+            </div>
+          )}
           
           {/* Search */}
           <div className="relative">
@@ -347,78 +408,97 @@ const Dashboard = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
+              disabled={!canAccessConversations()}
             />
           </div>
         </div>
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-2">
-            {filteredConversations.map((conversation) => (
-              <Card
-                key={conversation.id}
-                className={`p-3 cursor-pointer transition-all hover:shadow-md ${
-                  selectedConversation === conversation.id 
-                    ? 'border-waifu-pink bg-waifu-lightPink/20' 
-                    : 'hover:border-waifu-pink/30'
-                }`}
-                onClick={() => setSelectedConversation(conversation.id)}
+          {!canAccessConversations() ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                <div className="text-2xl">🔒</div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Faça upgrade do seu plano para acessar as conversas
+              </p>
+              <Button
+                onClick={() => setShowPricingPopover(true)}
+                size="sm"
+                className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-r from-waifu-pink to-waifu-purple">
-                      {conversation.waifu_avatar && conversation.waifu_avatar.startsWith('http') ? (
-                        <img 
-                          src={conversation.waifu_avatar} 
-                          alt={conversation.waifu_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-white text-sm font-bold">
-                          {conversation.waifu_avatar || conversation.waifu_name.charAt(0)}
-                        </span>
-                      )}
+                Ver Planos
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredConversations.map((conversation) => (
+                <Card
+                  key={conversation.id}
+                  className={`p-3 cursor-pointer transition-all hover:shadow-md ${
+                    selectedConversation === conversation.id 
+                      ? 'border-waifu-pink bg-waifu-lightPink/20' 
+                      : 'hover:border-waifu-pink/30'
+                  }`}
+                  onClick={() => setSelectedConversation(conversation.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-r from-waifu-pink to-waifu-purple">
+                        {conversation.waifu_avatar && conversation.waifu_avatar.startsWith('http') ? (
+                          <img 
+                            src={conversation.waifu_avatar} 
+                            alt={conversation.waifu_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-white text-sm font-bold">
+                            {conversation.waifu_avatar || conversation.waifu_name.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-900">
+                          {conversation.waifu_name}
+                        </p>
+                        <p className="text-xs text-gray-500 capitalize">
+                          {conversation.waifu_personality}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm text-gray-900">
-                        {conversation.waifu_name}
-                      </p>
-                      <p className="text-xs text-gray-500 capitalize">
-                        {conversation.waifu_personality}
-                      </p>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          editWaifu(conversation.id);
+                        }}
+                        className="p-1 h-auto"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteConversation(conversation.id);
+                        }}
+                        className="p-1 h-auto text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        editWaifu(conversation.id);
-                      }}
-                      className="p-1 h-auto"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteConversation(conversation.id);
-                      }}
-                      className="p-1 h-auto text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                  <div className="text-xs text-gray-400 mt-2">
+                    {new Date(conversation.updated_at).toLocaleDateString('pt-BR')}
                   </div>
-                </div>
-                <div className="text-xs text-gray-400 mt-2">
-                  {new Date(conversation.updated_at).toLocaleDateString('pt-BR')}
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* User Profile */}
@@ -541,32 +621,45 @@ const Dashboard = () => {
                 </div>
               </PopoverContent>
             </Popover>
+            
+            <Button
+              onClick={verifyPayment}
+              variant="outline"
+              size="sm"
+              disabled={paymentVerifying}
+              className="px-3"
+            >
+              {paymentVerifying ? '...' : '🔄'}
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {selectedConversation ? (
+        {selectedConversation && canAccessConversations() ? (
           <ConversationHistory conversationId={selectedConversation} />
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-md">
               <div className="w-32 h-32 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-heart">
-                <div className="text-6xl">💕</div>
+                <div className="text-6xl">{canAccessConversations() ? '💕' : '🔒'}</div>
               </div>
               <h2 className="text-2xl font-bold text-waifu-purple mb-4">
-                Bem-vindo ao Waifu AI Chat!
+                {canAccessConversations() ? 'Bem-vindo ao Waifu AI Chat!' : 'Acesso Restrito'}
               </h2>
               <p className="text-waifu-purple/70 mb-6">
-                Crie sua waifu personalizada e comece a conversar com ela! 💖
+                {canAccessConversations() 
+                  ? 'Crie sua waifu personalizada e comece a conversar com ela! 💖'
+                  : 'Faça upgrade do seu plano para acessar as conversas com sua waifu! 💖'
+                }
               </p>
               <Button
-                onClick={createNewConversation}
+                onClick={canAccessConversations() ? createNewConversation : () => setShowPricingPopover(true)}
                 className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Criar Minha Waifu
+                {canAccessConversations() ? 'Criar Minha Waifu' : 'Ver Planos'}
               </Button>
             </div>
           </div>
@@ -574,7 +667,7 @@ const Dashboard = () => {
       </div>
 
       {/* Waifu Creator Modal */}
-      {showWaifuCreator && (
+      {showWaifuCreator && canAccessConversations() && (
         <WaifuCreator
           onClose={() => {
             setShowWaifuCreator(false);
