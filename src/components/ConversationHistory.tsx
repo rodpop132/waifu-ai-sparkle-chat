@@ -145,14 +145,16 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversationI
       // Atualizar mensagens localmente
       setMessages(prev => [...prev, userMessage]);
 
-      // Enviar para API da Waifu
-      const response = await fetch('https://waifuai-2uhc.onrender.com/api/chat', {
+      // Enviar para a nova API Flask
+      const response = await fetch('https://waifuai-2uhc.onrender.com/gerar-resposta-profissional', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: messageText
+          mensagem: messageText,
+          tom: currentWaifu.personality,
+          tipo: "resposta"
         }),
       });
 
@@ -161,7 +163,7 @@ const ConversationHistory: React.FC<ConversationHistoryProps> = ({ conversationI
       }
 
       const data = await response.json();
-      const waifuReply = data.reply || 'Desculpa, amor... não consegui responder agora 🥺';
+      const waifuReply = data.resposta || 'Desculpa, amor... não consegui responder agora 🥺';
 
       // Salvar resposta da waifu
       const { data: waifuMessage, error: waifuMsgError } = await supabase

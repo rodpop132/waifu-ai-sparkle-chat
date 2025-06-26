@@ -63,14 +63,16 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      // Fazer requisição para sua API personalizada
-      const response = await fetch('https://waifuai-2uhc.onrender.com/api/chat', {
+      // Fazer requisição para a nova API Flask
+      const response = await fetch('https://waifuai-2uhc.onrender.com/gerar-resposta-profissional', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: messageToSend
+          mensagem: messageToSend,
+          tom: "doce",
+          tipo: "resposta"
         }),
       });
 
@@ -79,7 +81,7 @@ const Chat = () => {
       }
 
       const data = await response.json();
-      const waifuReply = data.reply || 'Desculpa, amor... não consegui responder agora 🥺';
+      const waifuReply = data.resposta || 'Desculpa, amor... não consegui responder agora 🥺';
 
       const waifuMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -180,13 +182,15 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://waifuai-2uhc.onrender.com/api/chat', {
+      const response = await fetch('https://waifuai-2uhc.onrender.com/gerar-resposta-profissional', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: lastUserMessage.text
+          mensagem: lastUserMessage.text,
+          tom: "doce",
+          tipo: "resposta"
         }),
       });
 
@@ -195,7 +199,7 @@ const Chat = () => {
       }
 
       const data = await response.json();
-      const waifuReply = data.reply || 'Desculpa, amor... deixe-me tentar de novo 🥺';
+      const waifuReply = data.resposta || 'Desculpa, amor... deixe-me tentar de novo 🥺';
 
       const newWaifuMessage: Message = {
         id: Date.now().toString(),
