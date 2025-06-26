@@ -37,8 +37,10 @@ serve(async (req) => {
     // Buscar cliente no Stripe
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
-    let planType = 'free';
-    let messagesLimit = 30;
+    // Por padrão, usuário não tem plano válido
+    let planType = null;
+    let messagesLimit = 0;
+    let hasValidPayment = false;
 
     if (customers.data.length > 0) {
       const customerId = customers.data[0].id;
@@ -55,6 +57,7 @@ serve(async (req) => {
       // Verificar se alguma sessão foi paga
       for (const session of sessions.data) {
         if (session.payment_status === 'paid') {
+          hasValidPayment = true;
           // Determinar o plano baseado no valor pago
           const amountTotal = session.amount_total || 0;
           
@@ -70,21 +73,24 @@ serve(async (req) => {
       }
     }
 
-    // Atualizar o perfil do usuário
-    const { error: updateError } = await supabaseClient
-      .from('profiles')
-      .update({
-        plan_type: planType,
-        messages_limit: messagesLimit,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
+    // Só atualizar o perfil se houver pagamento válido
+    if (hasValidPayment && planType) {
+      const { error: updateError } = await supabaseClient
+        .from('profiles')
+        .update({
+          plan_type: planType,
+          messages_limit: messagesLimit,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
-    if (updateError) throw updateError;
+      if (updateError) throw updateError;
+    }
 
     return new Response(JSON.stringify({
       plan_type: planType,
       messages_limit: messagesLimit,
+      has_valid_payment: hasValidPayment,
       success: true
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -95,7 +101,8 @@ serve(async (req) => {
     console.error('Error in verify-payment:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      success: false 
+      success: false,
+      has_valid_payment: false
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

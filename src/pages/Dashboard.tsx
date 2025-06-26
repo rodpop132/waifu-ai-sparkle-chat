@@ -19,13 +19,13 @@ import {
   Heart,
   Check,
   Star,
-  Zap
+  Zap,
+  Lock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import WaifuCreator from '@/components/WaifuCreator';
 import ConversationHistory from '@/components/ConversationHistory';
-import PricingPlans from '@/components/PricingPlans';
 
 interface Conversation {
   id: string;
@@ -67,12 +67,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showPricingPopover, setShowPricingPopover] = useState(false);
   const [paymentVerifying, setPaymentVerifying] = useState(false);
+  const [hasValidPayment, setHasValidPayment] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadUserData();
     loadConversations();
-    // Verificar pagamento quando a página carrega (caso o usuário tenha voltado do checkout)
+    // Verificar pagamento quando a página carrega
     verifyPayment();
   }, []);
 
@@ -126,38 +127,36 @@ const Dashboard = () => {
       
       if (error) throw error;
       
-      if (data.success) {
+      if (data.success && data.has_valid_payment) {
+        setHasValidPayment(true);
         // Recarregar dados do usuário após verificação de pagamento
         await loadUserData();
         
-        if (data.plan_type !== 'free') {
+        if (data.plan_type) {
           toast.success(`Plano ${data.plan_type.toUpperCase()} ativado com sucesso! 🎉`);
         }
+      } else {
+        setHasValidPayment(false);
       }
     } catch (error) {
       console.error('Erro ao verificar pagamento:', error);
+      setHasValidPayment(false);
     } finally {
       setPaymentVerifying(false);
     }
   };
 
   const canAccessConversations = () => {
-    if (!userProfile) return false;
-    
-    // Se for plano gratuito, verificar limite de mensagens
-    if (userProfile.plan_type === 'free') {
-      return userProfile.messages_used < userProfile.messages_limit;
-    }
-    
-    // Para planos pagos, sempre permitir acesso
-    return userProfile.plan_type === 'pro' || userProfile.plan_type === 'ultra';
+    return hasValidPayment && userProfile && (userProfile.plan_type === 'pro' || userProfile.plan_type === 'ultra');
   };
 
-  const getMessageLimitWarning = () => {
-    if (!userProfile) return null;
+  const getAccessMessage = () => {
+    if (!hasValidPayment) {
+      return "Você precisa de um plano pago para acessar as conversas. Escolha um plano para começar! 💕";
+    }
     
-    if (userProfile.plan_type === 'free' && userProfile.messages_used >= userProfile.messages_limit) {
-      return "Você atingiu o limite de mensagens do plano gratuito. Faça upgrade para continuar conversando! 💕";
+    if (userProfile?.plan_type === 'pro' && userProfile.messages_used >= userProfile.messages_limit) {
+      return "Você atingiu o limite de mensagens do plano Pro. Faça upgrade para Ultra ou aguarde o próximo ciclo! 💕";
     }
     
     return null;
@@ -263,7 +262,7 @@ const Dashboard = () => {
     switch (planType) {
       case 'pro': return <Crown className="w-4 h-4" />;
       case 'ultra': return <Sparkles className="w-4 h-4" />;
-      default: return <Heart className="w-4 h-4" />;
+      default: return <Lock className="w-4 h-4" />;
     }
   };
 
@@ -370,7 +369,7 @@ const Dashboard = () => {
     );
   }
 
-  const messageLimitWarning = getMessageLimitWarning();
+  const accessMessage = getAccessMessage();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -394,9 +393,9 @@ const Dashboard = () => {
           </div>
           
           {/* Warning Message */}
-          {messageLimitWarning && (
+          {accessMessage && (
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">{messageLimitWarning}</p>
+              <p className="text-sm text-yellow-800">{accessMessage}</p>
             </div>
           )}
           
@@ -421,7 +420,7 @@ const Dashboard = () => {
                 <div className="text-2xl">🔒</div>
               </div>
               <p className="text-sm text-gray-500 mb-4">
-                Faça upgrade do seu plano para acessar as conversas
+                {!hasValidPayment ? 'Escolha um plano para acessar as conversas' : 'Limite de mensagens atingido'}
               </p>
               <Button
                 onClick={() => setShowPricingPopover(true)}
@@ -515,10 +514,12 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2">
                   <Badge 
                     variant="outline" 
-                    className={`text-xs bg-gradient-to-r ${getPlanColor(userProfile.plan_type)} text-white border-0`}
+                    className={`text-xs bg-gradient-to-r ${getPlanColor(hasValidPayment ? userProfile.plan_type : 'none')} text-white border-0`}
                   >
-                    {getPlanIcon(userProfile.plan_type)}
-                    <span className="ml-1 capitalize">{userProfile.plan_type}</span>
+                    {getPlanIcon(hasValidPayment ? userProfile.plan_type : 'none')}
+                    <span className="ml-1 capitalize">
+                      {hasValidPayment ? userProfile.plan_type : 'Sem Plano'}
+                    </span>
                   </Badge>
                 </div>
               </div>
@@ -526,7 +527,7 @@ const Dashboard = () => {
           )}
           
           {/* Usage Stats */}
-          {userProfile && (
+          {userProfile && hasValidPayment && (
             <div className="mb-3">
               <div className="flex justify-between text-xs text-gray-600 mb-1">
                 <span>Mensagens usadas</span>
@@ -651,7 +652,7 @@ const Dashboard = () => {
               <p className="text-waifu-purple/70 mb-6">
                 {canAccessConversations() 
                   ? 'Crie sua waifu personalizada e comece a conversar com ela! 💖'
-                  : 'Faça upgrade do seu plano para acessar as conversas com sua waifu! 💖'
+                  : 'Escolha um plano pago para acessar as conversas com sua waifu! 💖'
                 }
               </p>
               <Button
