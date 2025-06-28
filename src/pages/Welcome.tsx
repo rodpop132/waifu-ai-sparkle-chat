@@ -2,13 +2,25 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Sparkles, Star, Play, MessageCircle, Zap, Crown } from 'lucide-react';
+import { Heart, Sparkles, Star, Play, MessageCircle, Zap, Crown, LogIn } from 'lucide-react';
 
 const Welcome = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen waifu-gradient flex flex-col relative overflow-hidden">
+      {/* Header com botão de login */}
+      <div className="absolute top-6 right-6 z-10">
+        <Button
+          onClick={() => navigate('/auth')}
+          variant="outline"
+          className="bg-white/90 backdrop-blur-sm border-2 border-waifu-pink/30 text-waifu-purple hover:bg-waifu-pink/10 hover:border-waifu-pink font-semibold"
+        >
+          <LogIn className="w-4 h-4 mr-2" />
+          Entrar / Criar Conta
+        </Button>
+      </div>
+
       {/* Floating sparkles - mais elementos decorativos */}
       <div className="absolute top-10 left-10 text-waifu-pink animate-float">
         <Sparkles size={28} />
@@ -102,7 +114,7 @@ const Welcome = () => {
               <div className="relative">
                 <div className="w-80 h-96 lg:w-96 lg:h-[28rem] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 bg-gradient-to-br from-waifu-lightPink/20 to-waifu-purple/20 backdrop-blur-sm">
                   <img 
-                    src="/lovable-uploads/2e79e9bb-6b54-47b3-a21c-bd4f03381362.png"
+                    src="/lovable-uploads/d647be7e-39d8-4494-95fe-7d0d26810b05.png"
                     alt="Waifu AI Character"
                     className="w-full h-full object-cover"
                   />
