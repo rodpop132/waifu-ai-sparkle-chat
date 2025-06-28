@@ -3,21 +3,26 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Sparkles, Star, Play, MessageCircle, Zap, Crown, LogIn } from 'lucide-react';
+import NotificationSystem from '@/components/NotificationSystem';
 
 const Welcome = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen waifu-gradient flex flex-col relative overflow-hidden">
-      {/* Header com botão de login */}
-      <div className="absolute top-6 right-6 z-10">
+      {/* Sistema de Notificações */}
+      <NotificationSystem />
+
+      {/* Header com botão de login - melhor posicionamento mobile */}
+      <div className="absolute top-4 right-4 z-10 lg:top-6 lg:right-6">
         <Button
           onClick={() => navigate('/auth')}
           variant="outline"
-          className="bg-white/90 backdrop-blur-sm border-2 border-waifu-pink/30 text-waifu-purple hover:bg-waifu-pink/10 hover:border-waifu-pink font-semibold"
+          className="bg-white/95 backdrop-blur-sm border-2 border-waifu-pink/30 text-waifu-purple hover:bg-waifu-pink/10 hover:border-waifu-pink font-semibold text-sm px-3 py-2 lg:text-base lg:px-4 lg:py-2"
         >
-          <LogIn className="w-4 h-4 mr-2" />
-          Entrar / Criar Conta
+          <LogIn className="w-3 h-3 mr-1 lg:w-4 lg:h-4 lg:mr-2" />
+          <span className="hidden sm:inline">Entrar / Criar Conta</span>
+          <span className="sm:hidden">Login</span>
         </Button>
       </div>
 
@@ -42,7 +47,7 @@ const Welcome = () => {
       </div>
 
       {/* Hero Section */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-4 pt-20 lg:pt-4">
         <div className="text-center max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Conteúdo principal */}
