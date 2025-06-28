@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -304,6 +305,11 @@ const Dashboard = () => {
   };
 
   const handlePlanSelect = (planId: string) => {
+    if (planId === 'free') {
+      toast.error('Plano gratuito não está mais disponível. Escolha um plano pago! 💕');
+      return;
+    }
+
     const planUrls = {
       'pro': 'https://buy.stripe.com/14A6oJ9gV9IHb3BbTyafS0a',
       'ultra': 'https://buy.stripe.com/9B6bJ30Kp1cb2x55vaafS09'
@@ -566,8 +572,85 @@ const Dashboard = () => {
                         Planos
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-96 p-0" align="end" side="top">
-                      {/* ... keep existing pricing popover content */}
+                    <PopoverContent className="w-[480px] p-0" align="end" side="top">
+                      <div className="bg-gradient-to-br from-waifu-lightPink via-purple-50 to-blue-50 rounded-lg">
+                        <div className="p-6">
+                          <div className="text-center mb-6">
+                            <h3 className="text-2xl font-bold bg-gradient-to-r from-waifu-pink to-waifu-purple bg-clip-text text-transparent mb-2">
+                              Escolha seu Plano
+                            </h3>
+                            <p className="text-waifu-purple/80">
+                              Converse com sua waifu personalizada! 💕
+                            </p>
+                          </div>
+
+                          <div className="space-y-4">
+                            {paidPlans.map((plan) => (
+                              <Card 
+                                key={plan.id} 
+                                className={`p-4 transition-all duration-300 hover:scale-[1.02] border-2 ${
+                                  plan.popular 
+                                    ? 'border-waifu-pink shadow-lg ring-2 ring-waifu-pink/20' 
+                                    : 'border-waifu-pink/20'
+                                } bg-white/95 backdrop-blur-sm relative`}
+                              >
+                                {plan.popular && (
+                                  <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-waifu-pink to-waifu-purple text-white font-bold px-3 py-1 rotate-12">
+                                    ⭐ Popular
+                                  </Badge>
+                                )}
+
+                                <div className="flex items-start gap-4">
+                                  <div className={`p-3 rounded-lg bg-gradient-to-r ${plan.gradient} text-white flex-shrink-0`}>
+                                    {plan.icon}
+                                  </div>
+                                  
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h4 className="text-lg font-bold text-waifu-purple">{plan.name}</h4>
+                                      <div className="text-right">
+                                        <div className="text-xl font-bold text-waifu-purple">{plan.price}</div>
+                                        <div className="text-xs text-waifu-purple/60">/mês</div>
+                                      </div>
+                                    </div>
+                                    
+                                    <p className="text-sm font-medium text-waifu-purple/80 mb-3">{plan.messages}</p>
+                                    
+                                    <div className="grid grid-cols-2 gap-1 mb-4">
+                                      {plan.features.slice(0, 4).map((feature, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                          <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                          <span className="text-xs text-waifu-purple/80">{feature}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    <Button
+                                      onClick={() => handlePlanSelect(plan.id)}
+                                      className={`w-full font-bold rounded-lg transition-all duration-300 ${
+                                        plan.popular
+                                          ? 'bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple text-white'
+                                          : 'bg-gradient-to-r from-gray-100 to-gray-200 hover:from-waifu-lightPink hover:to-waifu-pink text-waifu-purple hover:text-white'
+                                      }`}
+                                    >
+                                      {plan.buttonText}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+
+                          <div className="mt-6 text-center">
+                            <p className="text-xs text-waifu-purple/60 mb-2">
+                              ✨ Pagamentos seguros via Stripe
+                            </p>
+                            <p className="text-xs text-waifu-purple/60">
+                              💕 Suporte 24/7 para todos os planos pagos
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </PopoverContent>
                   </Popover>
                   
