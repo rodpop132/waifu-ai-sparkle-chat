@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,8 @@ import ConversationHistory from '@/components/ConversationHistory';
 import UserProfileEditor from '@/components/UserProfileEditor';
 import StatsCard from '@/components/StatsCard';
 import ConversationCard from '@/components/ConversationCard';
+import MobileSidebar from '@/components/MobileSidebar';
+import NotificationSystem from '@/components/NotificationSystem';
 
 interface Conversation {
   id: string;
@@ -367,7 +368,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-waifu-lightPink via-purple-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <div className="w-20 h-20 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-heart shadow-xl">
             <div className="text-3xl">🥰</div>
           </div>
@@ -386,9 +387,32 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-waifu-lightPink via-purple-50 to-blue-50">
-      <div className="flex h-screen">
-        {/* Enhanced Sidebar */}
-        <div className="w-96 bg-white/80 backdrop-blur-sm border-r border-white/50 flex flex-col shadow-xl">
+      {/* Notification System */}
+      <NotificationSystem />
+      
+      {/* Mobile Sidebar */}
+      <MobileSidebar
+        conversations={conversations}
+        userProfile={userProfile}
+        selectedConversation={selectedConversation}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        canAccessConversations={canAccessConversations}
+        getAccessMessage={getAccessMessage}
+        createNewConversation={createNewConversation}
+        setShowPricingPopover={setShowPricingPopover}
+        setSelectedConversation={setSelectedConversation}
+        editWaifu={editWaifu}
+        deleteConversation={deleteConversation}
+        setShowProfileEditor={setShowProfileEditor}
+        verifyPayment={verifyPayment}
+        paymentVerifying={paymentVerifying}
+        hasValidPayment={hasValidPayment}
+      />
+
+      <div className="hidden lg:flex h-screen">
+        {/* Enhanced Desktop Sidebar */}
+        <div className="w-96 bg-white/80 backdrop-blur-sm border-r border-white/50 flex flex-col shadow-xl animate-slide-in-right">
           {/* Enhanced Header */}
           <div className="p-6 border-b border-white/50">
             <div className="flex items-center justify-between mb-6">
@@ -402,7 +426,7 @@ const Dashboard = () => {
                 onClick={createNewConversation}
                 size="sm"
                 disabled={!canAccessConversations()}
-                className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:scale-105 transition-all duration-300"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Waifu
@@ -411,7 +435,7 @@ const Dashboard = () => {
             
             {/* Stats Overview */}
             {userProfile && hasValidPayment && (
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-in">
                 <StatsCard
                   title="Conversas"
                   value={conversations.length}
@@ -430,7 +454,7 @@ const Dashboard = () => {
             
             {/* Warning Message */}
             {accessMessage && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
+              <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl animate-fade-in">
                 <p className="text-sm text-yellow-800 font-medium">{accessMessage}</p>
               </div>
             )}
@@ -442,17 +466,17 @@ const Dashboard = () => {
                 placeholder="Buscar suas waifus..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-waifu-pink/30 focus:border-waifu-pink bg-white/70"
+                className="pl-10 border-waifu-pink/30 focus:border-waifu-pink bg-white/70 transition-all duration-300 hover:bg-white/90 focus:scale-105"
                 disabled={!canAccessConversations()}
               />
             </div>
           </div>
 
           {/* Enhanced Conversations List */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
             {!canAccessConversations() ? (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-6 opacity-60 shadow-lg">
+              <div className="text-center py-12 animate-fade-in">
+                <div className="w-20 h-20 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-6 opacity-60 shadow-lg animate-pulse-heart">
                   <div className="text-3xl">🔒</div>
                 </div>
                 <h3 className="text-lg font-semibold text-waifu-purple mb-2">Acesso Restrito</h3>
@@ -461,7 +485,7 @@ const Dashboard = () => {
                 </p>
                 <Button
                   onClick={() => setShowPricingPopover(true)}
-                  className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple shadow-lg"
+                  className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple shadow-lg hover:scale-105 transition-all duration-300"
                 >
                   <Star className="w-4 h-4 mr-2" />
                   Ver Planos
@@ -470,8 +494,8 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-3">
                 {filteredConversations.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-4 opacity-60">
+                  <div className="text-center py-8 animate-fade-in">
+                    <div className="w-16 h-16 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-4 opacity-60 animate-pulse-heart">
                       <Heart className="w-8 h-8 text-white" />
                     </div>
                     <p className="text-gray-500 mb-4">
@@ -481,7 +505,7 @@ const Dashboard = () => {
                       <Button
                         onClick={createNewConversation}
                         variant="outline"
-                        className="border-waifu-pink text-waifu-purple hover:bg-waifu-lightPink"
+                        className="border-waifu-pink text-waifu-purple hover:bg-waifu-lightPink hover:scale-105 transition-all duration-300"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Criar Primeira Waifu
@@ -489,15 +513,20 @@ const Dashboard = () => {
                     )}
                   </div>
                 ) : (
-                  filteredConversations.map((conversation) => (
-                    <ConversationCard
+                  filteredConversations.map((conversation, index) => (
+                    <div
                       key={conversation.id}
-                      conversation={conversation}
-                      isSelected={selectedConversation === conversation.id}
-                      onClick={() => setSelectedConversation(conversation.id)}
-                      onEdit={() => editWaifu(conversation.id)}
-                      onDelete={() => deleteConversation(conversation.id)}
-                    />
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <ConversationCard
+                        conversation={conversation}
+                        isSelected={selectedConversation === conversation.id}
+                        onClick={() => setSelectedConversation(conversation.id)}
+                        onEdit={() => editWaifu(conversation.id)}
+                        onDelete={() => deleteConversation(conversation.id)}
+                      />
+                    </div>
                   ))
                 )}
               </div>
@@ -505,11 +534,11 @@ const Dashboard = () => {
           </div>
 
           {/* Enhanced User Profile */}
-          <div className="p-6 border-t border-white/50 bg-gradient-to-r from-white/50 to-waifu-lightPink/20">
+          <div className="p-6 border-t border-white/50 bg-gradient-to-r from-white/50 to-waifu-lightPink/20 animate-fade-in">
             {userProfile && (
               <>
                 <div className="flex items-center gap-4 mb-4">
-                  <Avatar className="w-12 h-12 shadow-lg">
+                  <Avatar className="w-12 h-12 shadow-lg hover:scale-110 transition-transform duration-300">
                     <AvatarFallback className="bg-gradient-to-r from-waifu-pink to-waifu-purple text-white text-lg">
                       {userProfile.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -521,14 +550,14 @@ const Dashboard = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowProfileEditor(true)}
-                        className="p-1 h-auto hover:bg-waifu-lightPink/50"
+                        className="p-1 h-auto hover:bg-waifu-lightPink/50 hover:scale-110 transition-all duration-300"
                       >
                         <Edit className="w-3 h-3" />
                       </Button>
                     </div>
                     <Badge 
                       variant="outline" 
-                      className={`text-xs bg-gradient-to-r ${getPlanColor(hasValidPayment ? userProfile.plan_type : 'none')} text-white border-0 shadow-md`}
+                      className={`text-xs bg-gradient-to-r ${getPlanColor(hasValidPayment ? userProfile.plan_type : 'none')} text-white border-0 shadow-md hover:scale-105 transition-transform duration-300`}
                     >
                       {getPlanIcon(hasValidPayment ? userProfile.plan_type : 'none')}
                       <span className="ml-1 capitalize">
@@ -540,7 +569,7 @@ const Dashboard = () => {
                 
                 {/* Enhanced Usage Stats */}
                 {hasValidPayment && (
-                  <div className="mb-4 p-4 bg-white/60 rounded-xl">
+                  <div className="mb-4 p-4 bg-white/60 rounded-xl hover:bg-white/80 transition-all duration-300">
                     <div className="flex justify-between text-sm text-gray-600 mb-2">
                       <span className="font-medium">Mensagens este mês</span>
                       <span className="font-bold">
@@ -548,9 +577,9 @@ const Dashboard = () => {
                       </span>
                     </div>
                     {userProfile.messages_limit !== -1 && (
-                      <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                         <div 
-                          className="bg-gradient-to-r from-waifu-pink to-waifu-purple h-3 rounded-full transition-all shadow-sm"
+                          className="bg-gradient-to-r from-waifu-pink to-waifu-purple h-3 rounded-full transition-all duration-1000 shadow-sm"
                           style={{ 
                             width: `${Math.min((userProfile.messages_used / userProfile.messages_limit) * 100, 100)}%` 
                           }}
@@ -566,7 +595,7 @@ const Dashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 border-waifu-pink/30 hover:bg-waifu-lightPink/50"
+                        className="flex-1 border-waifu-pink/30 hover:bg-waifu-lightPink/50 hover:scale-105 transition-all duration-300"
                       >
                         <Settings className="w-4 h-4 mr-2" />
                         Planos
@@ -659,7 +688,7 @@ const Dashboard = () => {
                     variant="outline"
                     size="sm"
                     disabled={paymentVerifying}
-                    className="px-4 border-waifu-pink/30 hover:bg-waifu-lightPink/50"
+                    className="px-4 border-waifu-pink/30 hover:bg-waifu-lightPink/50 hover:scale-105 transition-all duration-300"
                   >
                     {paymentVerifying ? '...' : '🔄'}
                   </Button>
@@ -675,7 +704,7 @@ const Dashboard = () => {
             <ConversationHistory conversationId={selectedConversation} />
           ) : (
             <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center max-w-lg">
+              <div className="text-center max-w-lg animate-fade-in">
                 <div className="w-40 h-40 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse-heart shadow-2xl">
                   <div className="text-7xl">{canAccessConversations() ? '💕' : '🔒'}</div>
                 </div>
@@ -691,10 +720,45 @@ const Dashboard = () => {
                 <Button
                   onClick={canAccessConversations() ? createNewConversation : () => setShowPricingPopover(true)}
                   size="lg"
-                  className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple shadow-xl text-lg px-8 py-4"
+                  className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple shadow-xl text-lg px-8 py-4 hover:scale-105 transition-all duration-300"
                 >
                   <Sparkles className="w-5 h-5 mr-3" />
                   {canAccessConversations() ? 'Criar Minha Waifu' : 'Ver Planos'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Content */}
+      <div className="lg:hidden">
+        <div className="pt-20 pb-4">
+          {selectedConversation && canAccessConversations() ? (
+            <div className="h-[calc(100vh-5rem)]">
+              <ConversationHistory conversationId={selectedConversation} />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center p-8 h-[calc(100vh-5rem)]">
+              <div className="text-center max-w-sm animate-fade-in">
+                <div className="w-32 h-32 bg-gradient-to-r from-waifu-pink to-waifu-purple rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse-heart shadow-2xl">
+                  <div className="text-5xl">{canAccessConversations() ? '💕' : '🔒'}</div>
+                </div>
+                <h2 className="text-2xl font-bold text-waifu-purple mb-4">
+                  {canAccessConversations() ? 'Bem-vindo!' : 'Acesso Restrito'}
+                </h2>
+                <p className="text-waifu-purple/70 mb-6 leading-relaxed">
+                  {canAccessConversations() 
+                    ? 'Crie sua waifu e comece a conversar! 💖'
+                    : 'Escolha um plano para acessar as conversas! 💖'
+                  }
+                </p>
+                <Button
+                  onClick={canAccessConversations() ? createNewConversation : () => setShowPricingPopover(true)}
+                  className="bg-gradient-to-r from-waifu-pink to-waifu-purple hover:from-waifu-accent hover:to-waifu-darkPurple shadow-lg hover:scale-105 transition-all duration-300"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  {canAccessConversations() ? 'Criar Waifu' : 'Ver Planos'}
                 </Button>
               </div>
             </div>
