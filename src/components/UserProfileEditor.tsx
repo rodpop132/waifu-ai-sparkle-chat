@@ -83,6 +83,9 @@ const UserProfileEditor: React.FC<UserProfileEditorProps> = ({ profile, onClose,
     }
   };
 
+  // Só mostra estatísticas de uso se o usuário tiver um plano pago
+  const hasValidPlan = profile.plan_type === 'pro' || profile.plan_type === 'ultra';
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-md bg-white">
@@ -118,27 +121,42 @@ const UserProfileEditor: React.FC<UserProfileEditorProps> = ({ profile, onClose,
             </Badge>
           </div>
 
-          {/* Plan Stats */}
-          <div className="bg-gradient-to-r from-waifu-lightPink to-purple-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <MessageSquare className="w-4 h-4 text-waifu-purple" />
-              <span className="text-sm font-medium text-waifu-purple">Uso de Mensagens</span>
-            </div>
-            <div className="flex justify-between text-sm text-waifu-purple/80 mb-2">
-              <span>Usadas: {profile.messages_used}</span>
-              <span>Limite: {profile.messages_limit === -1 ? '∞' : profile.messages_limit}</span>
-            </div>
-            {profile.messages_limit !== -1 && (
-              <div className="w-full bg-white rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-waifu-pink to-waifu-purple h-2 rounded-full transition-all"
-                  style={{ 
-                    width: `${Math.min((profile.messages_used / profile.messages_limit) * 100, 100)}%` 
-                  }}
-                />
+          {/* Plan Stats - só mostra se tiver plano pago */}
+          {hasValidPlan && (
+            <div className="bg-gradient-to-r from-waifu-lightPink to-purple-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare className="w-4 h-4 text-waifu-purple" />
+                <span className="text-sm font-medium text-waifu-purple">Uso de Mensagens</span>
               </div>
-            )}
-          </div>
+              <div className="flex justify-between text-sm text-waifu-purple/80 mb-2">
+                <span>Usadas: {profile.messages_used}</span>
+                <span>Limite: {profile.messages_limit === -1 ? '∞' : profile.messages_limit}</span>
+              </div>
+              {profile.messages_limit !== -1 && (
+                <div className="w-full bg-white rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-waifu-pink to-waifu-purple h-2 rounded-full transition-all"
+                    style={{ 
+                      width: `${Math.min((profile.messages_used / profile.messages_limit) * 100, 100)}%` 
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mensagem para usuários sem plano */}
+          {!hasValidPlan && (
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm font-medium text-yellow-800">Sem Plano Ativo</span>
+              </div>
+              <p className="text-xs text-yellow-700">
+                Escolha um plano pago para acessar todas as funcionalidades e começar a conversar com suas waifus!
+              </p>
+            </div>
+          )}
 
           {/* Form Fields */}
           <div className="space-y-4">
